@@ -1,0 +1,38 @@
+{
+    "name": "touhidurabir/eloquent-wherelike",
+    "description": "An extended laravel eloquent WHERE method to work with sql LIKE operator.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Touhidurabir\\EloquentWherelike\\": "src/"
+        }
+    },
+    "autoload-dev" : {
+        "psr-4" : {
+            "Touhidurabir\\EloquentWherelike\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Touhidur Rahman",
+            "email": "abircse06@gmail.com"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "orchestra/testbench": "^6.21"
+    },
+    "require": {
+        "php": ">=7.2",
+        "illuminate/database": "^8.64",
+        "illuminate/support": "^8.64"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Touhidurabir\\EloquentWherelike\\EloquentWherelikeServiceProvider"
+            ]
+        }
+    }
+}
