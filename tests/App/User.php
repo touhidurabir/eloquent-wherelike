@@ -24,4 +24,10 @@ class User extends Model {
      */
     protected $guarded = [];
 
+
+    public function profile() {
+
+        return $this->hasOne('Touhidurabir\EloquentWherelike\Tests\App\Profile');
+    }
+
 }

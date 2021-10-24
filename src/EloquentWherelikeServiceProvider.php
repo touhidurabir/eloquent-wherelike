@@ -2,6 +2,9 @@
 
 namespace Touhidurabir\EloquentWherelike;
 
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\ServiceProvider;
 
 class EloquentWherelikeServiceProvider extends ServiceProvider {
@@ -9,17 +12,19 @@ class EloquentWherelikeServiceProvider extends ServiceProvider {
     /**
      * Recursively resolve the chained relational dependency
      *
-     * @param  Builder  $builder
-     * @param  Array    $relations
-     * @param  Mixed    $searchTerm
-     * @param  String   $relationalCondition
+     * @param  object<\Illuminate\Database\Eloquent\Builder>   $builder
+     * @param  mixed                                        $searchTerm
+     * @param  array                                        $relations
+     * @param  bool                                         $withTrash
+     * @param  string                                       $relationalCondition
      *
      * @return Builder
      */
-    public function resolveRelationDependency(Builder $builder, 
-                                              array $relations = [], 
-                                              $searchTerm, 
-                                              $relationalCondition = 'orWhereHas') {
+    public function resolveRelationDependency(   Builder $builder, 
+                                                            $searchTerm,
+                                                    array   $relations           = [],
+                                                    bool    $withTrash           = false,
+                                                    string  $relationalCondition = 'orWhereHas') {
 
         $self = $this;
 
@@ -36,15 +41,24 @@ class EloquentWherelikeServiceProvider extends ServiceProvider {
         $relationName    = preg_replace('/\[[\s\S]+?\]/', '', $relation);
 
         return 
-            $builder->{$relationalCondition}($relationName, function ($query) use ($relationParams, $searchTerm, $relations, $self) {
+            $builder->{$relationalCondition}($relationName, function ($query) use ($relationParams, $searchTerm, $relations, $withTrash, $self) {
                 
-                $query = $self->resolveRelationDependency($query, $relations, $searchTerm, 'whereHas');
+                $query = $self->resolveRelationDependency($query, $searchTerm, $relations, $withTrash, 'whereHas');
 
                 $method = 'where';
 
                 foreach ($relationParams as $relParam) {
 
-                    $query->{$method}(trim($relParam), 'ILIKE', "%{$searchTerm}%");
+                    if ( $withTrash ) {
+
+                        $query = $query->withTrashed();
+                    }
+
+                    $query->{$method}(
+                        trim($relParam), 
+                        config('eloquent-wherelike.operator') ?? 'LIKE', 
+                        "%{$searchTerm}%"
+                    );
 					
                     $method = 'orWhere';
                 }
@@ -59,7 +73,9 @@ class EloquentWherelikeServiceProvider extends ServiceProvider {
      */
     public function register() {
         
-        //
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/eloquent-wherelike.php', 'eloquent-wherelike'
+        );
     }
 
 
@@ -70,11 +86,15 @@ class EloquentWherelikeServiceProvider extends ServiceProvider {
      */
     public function boot() {
 
+        $this->publishes([
+            __DIR__.'/../config/eloquent-wherelike.php' => base_path('config/eloquent-wherelike.php'),
+        ], 'config');
+
         $self = $this;
         
-        Builder::macro('whereLike', function ($attributes, string $searchTerm) use ($self) {
+        Builder::macro('whereLike', function ($attributes, $searchTerm, bool $withTrash = false) use ($self) {
 
-            $this->where(function (Builder $query) use ($attributes, $searchTerm, $self) {
+            $this->where(function (Builder $query) use ($attributes, $searchTerm, $withTrash, $self) {
 
                 $searchTerms = array_map('trim', explode(' ', $searchTerm));
 
@@ -85,18 +105,22 @@ class EloquentWherelikeServiceProvider extends ServiceProvider {
                         $query->when(
                             Str::contains($attribute, '.'),
     
-                            function (Builder $query) use ($attribute, $searchTerm, $self) {
+                            function (Builder $query) use ($attribute, $searchTerm, $withTrash, $self) {
     
                                 $relations = explode('.', $attribute);
     
                                 array_shift($relations);
     
-                                $self->resolveRelationDependency($query, $relations, $searchTerm);
+                                $self->resolveRelationDependency($query, $searchTerm, $relations, $withTrash);
                             },
     
                             function (Builder $query) use ($attribute, $searchTerm) {
 
-                                $query->orWhere($attribute, 'LIKE', "%{$searchTerm}%");
+                                $query->orWhere(
+                                    $attribute, 
+                                    config('eloquent-wherelike.operator') ?? 'LIKE', 
+                                    "%{$searchTerm}%"
+                                );
                             }
                         );
                     }

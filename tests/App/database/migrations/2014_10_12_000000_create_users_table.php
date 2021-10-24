@@ -14,7 +14,6 @@ class CreateUsersTable extends Migration
     {
         DB::connection()->getSchemaBuilder()->create('users', function (Blueprint $table) {
             $table->increments('id');
-            $table->string(config('hasher.column'))->nullable()->unique()->index();
             $table->string('email')->unique();
             $table->string('password', 60);
             $table->timestamps();
