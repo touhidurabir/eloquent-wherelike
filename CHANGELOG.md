@@ -9,3 +9,7 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.0] - 2022-01-26
 - Dependency Updated
+
+## [2.0.1] - 2022-01-26
+- Unnecessary Dependency Removed
+- Min PHP version set to 7.4
