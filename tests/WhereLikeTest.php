@@ -2,6 +2,7 @@
 
 namespace Touhidurabir\EloquentWherelike\Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use Orchestra\Testbench\TestCase;
 use Touhidurabir\EloquentWherelike\Tests\App\User;
 use Touhidurabir\EloquentWherelike\Tests\App\Profile;
@@ -30,6 +31,7 @@ class WhereLikeTest extends TestCase {
     /**
      * @test
      */
+    #[Test]
     public function it_can_search() {
 
         Profile::create(['first_name' => 'First', 'last_name' => 'last']);
@@ -45,6 +47,7 @@ class WhereLikeTest extends TestCase {
     /**
      * @test
      */
+    #[Test]
     public function it_can_search_with_relations() {
 
         $user = User::create(['email' => 'user1@test.com', 'password' => '123456']);
