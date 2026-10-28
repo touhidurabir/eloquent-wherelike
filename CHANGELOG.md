@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 - Laravel 11, 12 and 13 support added.
 - PHPUnit 10/11/12 support for tests.
 - Code style formatted to PSR-12 with Laravel Pint (`composer format` / `composer lint`).
-- Replaced Travis CI with GitHub Actions (PHP 8.2–8.4 × Laravel 11/12/13, plus a code style check).
+- Replaced Travis CI with GitHub Actions (PHP 8.1 × Laravel 8/9/10 and PHP 8.2–8.4 × Laravel 11/12/13, plus a code style check).
 - **Behaviour change:** fixed repeated, leading or trailing spaces in the search term producing empty terms. Each
   empty term became `LIKE '%%'`, which matched every row, so a search such as `'john  smith'` returned the whole
   table. Empty terms are now ignored. A search term that is empty or only spaces now adds no constraint at all
