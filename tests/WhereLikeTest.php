@@ -69,4 +69,21 @@ class WhereLikeTest extends TestCase
         $this->assertCount(0, $records);
     }
 
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function it_ignores_empty_terms_caused_by_repeated_whitespace()
+    {
+
+        Profile::create(['first_name' => 'First', 'last_name' => 'last']);
+        Profile::create(['first_name' => 'Other', 'last_name' => 'Person']);
+
+        $this->assertCount(1, Profile::whereLike(['first_name', 'last_name'], 'first  last')->get());
+        $this->assertCount(1, Profile::whereLike(['first_name', 'last_name'], ' first ')->get());
+        $this->assertCount(2, Profile::whereLike(['first_name', 'last_name'], 'first person')->get());
+        $this->assertCount(0, Profile::whereLike(['first_name', 'last_name'], 'nothing  matches')->get());
+    }
+
 }

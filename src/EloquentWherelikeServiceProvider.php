@@ -101,7 +101,12 @@ class EloquentWherelikeServiceProvider extends ServiceProvider
 
             $this->where(function (Builder $query) use ($attributes, $searchTerm, $withTrash, $self) {
 
-                $searchTerms = array_map('trim', explode(' ', $searchTerm));
+                $searchTerms = array_filter(
+                    array_map('trim', explode(' ', (string) $searchTerm)),
+                    function ($term) {
+                        return $term !== '';
+                    }
+                );
 
                 foreach ($searchTerms as $searchTerm) {
 
