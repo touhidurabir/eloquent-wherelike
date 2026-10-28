@@ -8,8 +8,8 @@ use Touhidurabir\EloquentWherelike\Tests\App\User;
 use Touhidurabir\EloquentWherelike\Tests\App\Profile;
 use Touhidurabir\EloquentWherelike\Tests\Traits\LaravelTestBootstrapping;
 
-class WhereLikeTest extends TestCase {
-
+class WhereLikeTest extends TestCase
+{
     use LaravelTestBootstrapping;
 
     /**
@@ -17,10 +17,11 @@ class WhereLikeTest extends TestCase {
      *
      * @return void
      */
-    protected function defineDatabaseMigrations() {
+    protected function defineDatabaseMigrations()
+    {
 
         $this->loadMigrationsFrom(__DIR__ . '/App/database/migrations');
-        
+
         $this->artisan('migrate', ['--database' => 'testbench'])->run();
 
         $this->beforeApplicationDestroyed(function () {
@@ -32,7 +33,8 @@ class WhereLikeTest extends TestCase {
      * @test
      */
     #[Test]
-    public function it_can_search() {
+    public function it_can_search()
+    {
 
         Profile::create(['first_name' => 'First', 'last_name' => 'last']);
 
@@ -42,13 +44,14 @@ class WhereLikeTest extends TestCase {
         $records = Profile::whereLike(['first_name', 'last_name'], 'filgdflgdf')->get();
         $this->assertCount(0, $records);
     }
-    
+
 
     /**
      * @test
      */
     #[Test]
-    public function it_can_search_with_relations() {
+    public function it_can_search_with_relations()
+    {
 
         $user = User::create(['email' => 'user1@test.com', 'password' => '123456']);
         $user->profile()->create(['first_name' => 'User1', 'last_name' => 'user']);
