@@ -132,4 +132,66 @@ class WhereLikeTest extends TestCase
         $this->assertSame(1, WithTrashedCountingBuilder::$withTrashedCalls);
     }
 
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function wildcards_in_the_search_term_are_not_escaped_by_default()
+    {
+
+        Profile::create(['first_name' => '100% Cotton', 'last_name' => 'shirt']);
+        Profile::create(['first_name' => '1000 Cotton', 'last_name' => 'shirt']);
+
+        $this->assertCount(2, Profile::whereLike(['first_name'], '100%')->get());
+    }
+
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function it_can_escape_wildcards_in_the_search_term_when_enabled()
+    {
+
+        config()->set('eloquent-wherelike.escape_wildcards', true);
+
+        Profile::create(['first_name' => '100% Cotton', 'last_name' => 'shirt']);
+        Profile::create(['first_name' => '1000 Cotton', 'last_name' => 'shirt']);
+        Profile::create(['first_name' => 'snake_case', 'last_name' => 'name']);
+        Profile::create(['first_name' => 'snakeXcase', 'last_name' => 'name']);
+        Profile::create(['first_name' => 'Hey!', 'last_name' => 'bang']);
+        Profile::create(['first_name' => 'back\\slash', 'last_name' => 'path']);
+
+        $this->assertCount(1, Profile::whereLike(['first_name', 'last_name'], '100%')->get());
+        $this->assertCount(1, Profile::whereLike(['first_name', 'last_name'], 'snake_case')->get());
+        $this->assertCount(1, Profile::whereLike(['first_name', 'last_name'], 'hey!')->get());
+        $this->assertCount(1, Profile::whereLike(['first_name', 'last_name'], 'back\\slash')->get());
+        $this->assertCount(1, Profile::whereLike(['first_name', 'last_name'], '%')->get());
+        $this->assertCount(1, Profile::whereLike(['first_name', 'last_name'], '_')->get());
+        $this->assertCount(0, Profile::whereLike(['first_name', 'last_name'], '!%')->get());
+        $this->assertCount(2, Profile::whereLike(['first_name', 'last_name'], 'cotton')->get());
+    }
+
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function it_can_escape_wildcards_in_relation_searches_when_enabled()
+    {
+
+        config()->set('eloquent-wherelike.escape_wildcards', true);
+
+        $user = User::create(['email' => 'user1@test.com', 'password' => '123456']);
+        $user->profile()->create(['first_name' => '100% Cotton', 'last_name' => 'shirt']);
+
+        $user = User::create(['email' => 'user2@test.com', 'password' => '123456']);
+        $user->profile()->create(['first_name' => '1000 Cotton', 'last_name' => 'shirt']);
+
+        $this->assertCount(1, User::whereLike(['email', '.profile[first_name, last_name]'], '100%')->get());
+        $this->assertCount(2, User::whereLike(['email', '.profile[first_name, last_name]'], 'cotton')->get());
+        $this->assertCount(0, User::whereLike(['email', '.profile[first_name, last_name]'], '_')->get());
+    }
+
 }

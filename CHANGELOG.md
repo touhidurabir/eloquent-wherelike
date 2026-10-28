@@ -11,6 +11,9 @@ All notable changes to this project will be documented in this file.
   table. Empty terms are now ignored. A search term that is empty or only spaces now adds no constraint at all
   (before, it added `LIKE '%%'`, which matched every row with a non-null value in a searched column).
 - `withTrashed()` is now applied once per relation instead of once per relation column.
+- Added the opt-in `escape_wildcards` config option (default `false`, so the existing behaviour is unchanged). When
+  enabled, `%` and `_` in the search term match literally instead of acting as `LIKE` wildcards. Apps with a
+  published config file can add `'escape_wildcards' => true` to it.
 
 
 ## [1.0.0] - 2021-10-24

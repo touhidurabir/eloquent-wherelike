@@ -2,6 +2,7 @@
 
 namespace Touhidurabir\EloquentWherelike;
 
+use InvalidArgumentException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
@@ -9,6 +10,16 @@ use Illuminate\Support\ServiceProvider;
 
 class EloquentWherelikeServiceProvider extends ServiceProvider
 {
+    /**
+     * The escape character used when the LIKE wildcards are escaped.
+     *
+     * The backslash is avoided on purpose: MySQL and PostgreSQL disagree on
+     * how to write it in an SQL string literal, while "!" needs no quoting.
+     *
+     * @var string
+     */
+    public const LIKE_ESCAPE_CHARACTER = '!';
+
     /**
      * Recursively resolve the chained relational dependency
      *
@@ -56,15 +67,84 @@ class EloquentWherelikeServiceProvider extends ServiceProvider
 
                 foreach ($relationParams as $relParam) {
 
-                    $query->{$method}(
-                        trim($relParam),
-                        config('eloquent-wherelike.operator') ?? 'LIKE',
-                        "%{$searchTerm}%"
-                    );
+                    $self->addLikeConstraint($query, $method, trim($relParam), $searchTerm);
 
                     $method = 'orWhere';
                 }
             });
+    }
+
+
+    /**
+     * Add a single "column LIKE %term%" constraint to the query
+     *
+     * When the "escape_wildcards" config option is enabled, the LIKE wildcards
+     * (% and _) in the search term are escaped so that they match literally.
+     * The escaping uses an explicit ESCAPE clause, so that it works the same
+     * on every database driver (SQLite has no default escape character).
+     *
+     * @param  object<\Illuminate\Database\Eloquent\Builder>   $query
+     * @param  string                                       $method     where|orWhere
+     * @param  string                                       $column
+     * @param  mixed                                        $searchTerm
+     *
+     * @return Builder
+     */
+    public function addLikeConstraint(Builder $query, string $method, string $column, $searchTerm)
+    {
+
+        $operator = config('eloquent-wherelike.operator') ?? 'LIKE';
+
+        if (! config('eloquent-wherelike.escape_wildcards', false)) {
+
+            return $query->{$method}($column, $operator, "%{$searchTerm}%");
+        }
+
+        if (! preg_match('/^[a-z ]+$/i', $operator)) {
+
+            throw new InvalidArgumentException(
+                "The eloquent-wherelike.operator [{$operator}] is not valid when escape_wildcards is enabled."
+            );
+        }
+
+        $baseQuery = $query->getQuery();
+
+        return $query->{$method === 'orWhere' ? 'orWhereRaw' : 'whereRaw'}(
+            $baseQuery->getGrammar()->wrap($column) . ' ' . $operator . " ? ESCAPE '" . static::LIKE_ESCAPE_CHARACTER . "'",
+            ['%' . $this->escapeLikeWildcards((string) $searchTerm, $baseQuery->getConnection()->getDriverName()) . '%']
+        );
+    }
+
+
+    /**
+     * Escape the LIKE wildcards in the given value, using LIKE_ESCAPE_CHARACTER
+     *
+     * @param  string $value
+     * @param  string $driver
+     *
+     * @return string
+     */
+    public function escapeLikeWildcards(string $value, string $driver = '')
+    {
+
+        $escape = static::LIKE_ESCAPE_CHARACTER;
+
+        $characters = [$escape, '%', '_'];
+
+        // SQL Server also treats [ as a wildcard (character ranges)
+        if ($driver === 'sqlsrv') {
+
+            $characters[] = '[';
+        }
+
+        $replacements = [];
+
+        foreach ($characters as $character) {
+
+            $replacements[$character] = $escape . $character;
+        }
+
+        return strtr($value, $replacements);
     }
 
 
@@ -122,13 +202,9 @@ class EloquentWherelikeServiceProvider extends ServiceProvider
 
                                 $self->resolveRelationDependency($query, $searchTerm, $relations, $withTrash);
                             },
-                            function (Builder $query) use ($attribute, $searchTerm) {
+                            function (Builder $query) use ($attribute, $searchTerm, $self) {
 
-                                $query->orWhere(
-                                    $attribute,
-                                    config('eloquent-wherelike.operator') ?? 'LIKE',
-                                    "%{$searchTerm}%"
-                                );
+                                $self->addLikeConstraint($query, 'orWhere', $attribute, $searchTerm);
                             }
                         );
                     }
