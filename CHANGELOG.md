@@ -2,6 +2,19 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+
+## [1.0.0] - 2021-10-24
+- Initial Release
+
+## [2.0.0] - 2022-01-26
+- Dependency Updated
+
+## [2.0.1] - 2022-01-26
+- Unnecessary Dependency Removed
+- Min PHP version set to 7.4
+
+## [2.1.0] - 2026-10-28
 - Laravel 11, 12 and 13 support added.
 - PHPUnit 10/11/12 support for tests.
 - Code style formatted to PSR-12 with Laravel Pint (`composer format` / `composer lint`).
@@ -14,14 +27,3 @@ All notable changes to this project will be documented in this file.
 - Added the opt-in `escape_wildcards` config option (default `false`, so the existing behaviour is unchanged). When
   enabled, `%` and `_` in the search term match literally instead of acting as `LIKE` wildcards. Apps with a
   published config file can add `'escape_wildcards' => true` to it.
-
-
-## [1.0.0] - 2021-10-24
-- Initial Release
-
-## [2.0.0] - 2022-01-26
-- Dependency Updated
-
-## [2.0.1] - 2022-01-26
-- Unnecessary Dependency Removed
-- Min PHP version set to 7.4
