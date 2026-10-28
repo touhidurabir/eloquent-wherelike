@@ -49,12 +49,12 @@ class EloquentWherelikeServiceProvider extends ServiceProvider
 
                 $method = 'where';
 
+                if ($withTrash && ! empty($relationParams)) {
+
+                    $query = $query->withTrashed();
+                }
+
                 foreach ($relationParams as $relParam) {
-
-                    if ($withTrash) {
-
-                        $query = $query->withTrashed();
-                    }
 
                     $query->{$method}(
                         trim($relParam),

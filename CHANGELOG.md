@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
   empty term became `LIKE '%%'`, which matched every row, so a search such as `'john  smith'` returned the whole
   table. Empty terms are now ignored. A search term that is empty or only spaces now adds no constraint at all
   (before, it added `LIKE '%%'`, which matched every row with a non-null value in a searched column).
+- `withTrashed()` is now applied once per relation instead of once per relation column.
 
 
 ## [1.0.0] - 2021-10-24

@@ -31,4 +31,11 @@ class User extends Model
         return $this->hasOne('Touhidurabir\EloquentWherelike\Tests\App\Profile');
     }
 
+
+    public function trackedProfile()
+    {
+
+        return $this->hasOne(TrackedProfile::class, 'user_id');
+    }
+
 }
