@@ -23,6 +23,14 @@ php artisan vendor:publish --provider="Touhidurabir\EloquentWherelike\EloquentWh
 
 The config file contains one important configuration option; the **operator** which defines the SQL operator that will be used to perform the query. By default it's set to **LIKE**, but you can update it as you see fit. For example, for PostgreSQL, it should be set to **ILIKE**.
 
+The **escape_wildcards** option (default `false`) controls how the SQL `LIKE` wildcards `%` and `_` in the search term are treated. By default they keep their wildcard meaning, so searching for `100%` also matches `1000`. Set it to `true` to escape them, so that they only match the literal characters:
+
+```php
+'escape_wildcards' => true,
+```
+
+When enabled, the query uses an explicit `ESCAPE '!'` clause, which works the same on MySQL, MariaDB, PostgreSQL, SQLite and SQL Server. The **operator** must then be a plain word operator such as `LIKE`, `ILIKE` or `NOT LIKE`.
+
 ## Usage
 
 As this **whereLike** method is defined as a **macro**, just use it like any eloquent method. 

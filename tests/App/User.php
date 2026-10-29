@@ -5,8 +5,8 @@ namespace Touhidurabir\EloquentWherelike\Tests\App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class User extends Model {
-
+class User extends Model
+{
     use SoftDeletes;
 
     /**
@@ -25,9 +25,17 @@ class User extends Model {
     protected $guarded = [];
 
 
-    public function profile() {
+    public function profile()
+    {
 
         return $this->hasOne('Touhidurabir\EloquentWherelike\Tests\App\Profile');
+    }
+
+
+    public function trackedProfile()
+    {
+
+        return $this->hasOne(TrackedProfile::class, 'user_id');
     }
 
 }
